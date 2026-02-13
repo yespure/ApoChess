@@ -13,6 +13,7 @@ public class GridManager : MonoBehaviour
     [SerializeField] private int width = 10;
     [SerializeField] private int depth = 10;
     [SerializeField] private float cellSize = 2f;
+    [SerializeField] private float heightOffset = 1f;
 
     public Dictionary<Vector2Int, Node> grid = new Dictionary<Vector2Int, Node>();
     //在awake生成格子保证角色生成
@@ -67,7 +68,7 @@ public class GridManager : MonoBehaviour
         //获取世界坐标
         return new Vector3(
             transform.position.x + node.gridPos.x * cellSize,
-            node.height,
+            node.height+heightOffset,
             transform.position.z + node.gridPos.y * cellSize
         );
     }
@@ -88,5 +89,29 @@ public class GridManager : MonoBehaviour
                 new Vector3(cellSize, 0.1f, cellSize)
             );
         }
+    }
+    //寻找相邻格子,自动寻路用
+    public List<Node> GetNeighbours(Node node)
+    {
+        List<Node> neighbours = new List<Node>();
+
+        Vector2Int[] dirs =
+        {
+        new Vector2Int(1,0),
+        new Vector2Int(-1,0),
+        new Vector2Int(0,1),
+        new Vector2Int(0,-1)
+    };
+        //遍历所有当前位置的dirs
+        foreach (var dir in dirs)
+        {
+            Vector2Int checkPos = node.gridPos + dir;
+            Node neighbour = GetNode(checkPos);
+            //如果有格子且能够行走,加入neighbourlist中
+            if (neighbour != null && neighbour.CanWalk())
+                neighbours.Add(neighbour);
+        }
+
+        return neighbours;
     }
 }

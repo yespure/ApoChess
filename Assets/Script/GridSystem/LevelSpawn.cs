@@ -9,13 +9,11 @@ public class LevelSpawn : MonoBehaviour
 
     [Header("Spawn Grid Position")]
     [SerializeField] private Vector2Int spawnGridPosition;
-    [SerializeField] private float spawnHeightOffset = 1f;
     private GameObject currentPlayer;
 
-    public void Start()
+    private void OnEnable()
     {
-        //在游戏开始时生成玩家
-        SpawnPlayer();
+        RVcrash.OnGameStart += SpawnPlayer;//监听动画结束事件,结束后放置player
     }
 
     private void SpawnPlayer()
@@ -29,8 +27,6 @@ public class LevelSpawn : MonoBehaviour
         Node spawnNode = GridManager.Instance.GetNode(spawnGridPosition);
         //获取当前node的世界坐标
         Vector3 worldPosition = GridManager.Instance.GetWorldPosition(spawnNode);
-        //生成在格子上方,高度+
-        worldPosition.y += spawnHeightOffset;
         //生成玩家在这个位置
         currentPlayer = Instantiate(playerPrefab, worldPosition, Quaternion.identity);
 

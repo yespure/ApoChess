@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,6 +8,7 @@ public class RVcrash : MonoBehaviour
     public Vector3 targetPosition; 
     public float speed = 20f;
     private bool isMoving = true;
+    public static event Action OnGameStart;//动画结束事件
     // Start is called before the first frame update
     void Start()
     {
@@ -39,9 +41,10 @@ public class RVcrash : MonoBehaviour
     {
         Debug.Log("RV arrived!");
 
-       //音效
-       //特效
-       //动画
-       //后面衔接
+        //音效
+        //特效
+        //动画
+        //后面衔接
+        OnGameStart?.Invoke();
     }
 }

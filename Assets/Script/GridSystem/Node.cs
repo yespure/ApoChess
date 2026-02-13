@@ -9,6 +9,10 @@ public class Node
     public float height;
     public bool isWalkable = true;
     public bool isOccupied = false;
+    public int gCost; // 起点到这里
+    public int hCost; // 这里到终点
+    public int fCost => gCost + hCost;
+    public Node parent;
     public Node(Vector2Int pos, float height)
     {
         gridPos = pos;
