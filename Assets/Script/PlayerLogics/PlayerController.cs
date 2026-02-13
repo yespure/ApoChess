@@ -8,10 +8,16 @@ public class PlayerController : MonoBehaviour
     [Header("移动相关")]
     [SerializeField] private float moveSpeed = 4f;
     [SerializeField] private int moveRange = 3;
-    private bool isMoving;
     [Header("范围相关")]
     private HashSet<Node> reachableNodes;
     private Node currentNode;
+    public enum PlayerState
+    {
+        Idle,           
+        Moving,                  
+    }
+    [Header("玩家状态机")]
+    private PlayerState state = PlayerState.Idle;
     private void Start()
     {
         currentNode = GetCurrentNode();
@@ -20,7 +26,8 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetMouseButtonDown(0) && !isMoving)
+        if (state != PlayerState.Idle) return;
+        if (Input.GetMouseButtonDown(0))
         {
             Move();
         }
@@ -77,7 +84,7 @@ public class PlayerController : MonoBehaviour
     //根据path finding算法输出的路径移动
     IEnumerator FollowPath(List<Node> path)
     {
-        isMoving = true;
+        state = PlayerState.Moving;
 
         foreach (Node node in path)
         {
@@ -95,11 +102,30 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        isMoving = false;
+        state = PlayerState.Idle;
+        //重新计算range刷新
+        currentNode = GetCurrentNode();
+        CalculateRange();
     }
     //移动范围限制算法调用
     void CalculateRange()
     {
         reachableNodes = GridRange.GetReachableNodes(currentNode, moveRange);
+    }
+    //范围画线可视化 可删
+    private void OnDrawGizmos()
+    {
+        if (reachableNodes == null) return;
+        if (GridManager.Instance == null) return;
+
+        Gizmos.color = new Color(0f, 0.6f, 1f, 0.35f); // 半透明蓝
+
+        foreach (Node node in reachableNodes)
+        {
+            Vector3 pos = GridManager.Instance.GetWorldPosition(node);
+            pos.y += 0.05f; // 防止和地面Z fighting
+
+            Gizmos.DrawCube(pos, new Vector3(1.8f, 0.02f, 1.8f));
+        }
     }
 }
