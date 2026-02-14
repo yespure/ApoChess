@@ -11,25 +11,56 @@ public class PlayerController : MonoBehaviour
     [Header("范围相关")]
     private HashSet<Node> reachableNodes;
     private Node currentNode;
+
+    [Header("射击相关")]
+    [SerializeField] private float range = 25f;
+    [SerializeField] private float rotateSpeed = 350f;
+    [SerializeField] private LayerMask groundMask;
+    [SerializeField] private LayerMask enemyMask;
+    [SerializeField] private float shootHeight = 1.2f;
+    private Camera cam;
     public enum PlayerState
     {
         Idle,           
-        Moving,                  
+        Moving,
+        Aiming
     }
     [Header("玩家状态机")]
     private PlayerState state = PlayerState.Idle;
     private void Start()
     {
+        cam = Camera.main;
         currentNode = GetCurrentNode();
         CalculateRange();
     }
 
     void Update()
     {
-        if (state != PlayerState.Idle) return;
-        if (Input.GetMouseButtonDown(0))
+        switch (state)
         {
+            case PlayerState.Idle:
+                HandleIdle();
+                break;
+
+            case PlayerState.Moving:
+                break;
+
+            case PlayerState.Aiming:
+                Aim();
+                break;
+        }
+    }
+
+    void HandleIdle()
+    {
+        // 左键移动
+        if (Input.GetMouseButtonDown(0))
             Move();
+
+        // R进入瞄准
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            state = PlayerState.Aiming;
         }
     }
 
@@ -71,6 +102,11 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    void Aim()
+    {
+        AimRotate();
+        Shoot();
+    }
     Node GetCurrentNode()
     {
         //获得当前玩家位置
@@ -126,6 +162,51 @@ public class PlayerController : MonoBehaviour
             pos.y += 0.05f; // 防止和地面Z fighting
 
             Gizmos.DrawCube(pos, new Vector3(1.8f, 0.02f, 1.8f));
+        }
+    }
+
+    //跟随鼠标旋转逻辑
+    void AimRotate()
+    {
+        //从cam射出射线打向鼠标位置
+        Ray ray = cam.ScreenPointToRay(Input.mousePosition);
+
+        if (Physics.Raycast(ray, out RaycastHit hit, 200f, groundMask))
+        {
+            //获得鼠标在世界的位置
+            //方向计算
+            Vector3 dir = hit.point - transform.position;
+            //防止抬头
+            dir.y = 0f;
+            //防止鼠标再玩家脚下产生bug
+            if (dir.sqrMagnitude < 0.01f) return;
+            //面朝dir(鼠标位置)
+            Quaternion targetRot = Quaternion.LookRotation(dir);
+            //平滑移动
+            transform.rotation = Quaternion.RotateTowards(
+           transform.rotation,
+           targetRot,
+           rotateSpeed * Time.deltaTime
+           );
+        }
+    }
+
+    void Shoot()
+    {
+        if (!Input.GetMouseButton(0))
+            return;
+        //枪口高度
+        Vector3 origin = transform.position + Vector3.up * shootHeight;
+        //面朝方向
+        Vector3 dir = transform.forward;
+        //射击射线
+        if(Physics.Raycast(origin,dir,out RaycastHit hit, range, enemyMask))
+        {
+            Debug.Log("命中敌人: " + hit.collider.name);
+        }
+        else
+        {
+            Debug.Log("命中你妈");
         }
     }
 }
