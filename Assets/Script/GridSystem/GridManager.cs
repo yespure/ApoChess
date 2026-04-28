@@ -10,6 +10,7 @@ public class GridManager : MonoBehaviour
     public static GridManager Instance;
 
     [Header("Grid")]
+    [SerializeField] private GameObject gridVisualPrefab;
     [SerializeField] private int width = 10;
     [SerializeField] private int depth = 10;
     [SerializeField] private float cellSize = 2f;
@@ -35,7 +36,11 @@ public class GridManager : MonoBehaviour
                 //导入对应height信息到height
                 float height = GetHeightFromTerrain(pos);
                 //存入diction
-                grid.Add(pos, new Node(pos, height));
+                Node node = new Node(pos, height);
+                grid.Add(pos, node);
+
+                CreateGridVisual(node);
+
             }
         }
     }
@@ -113,5 +118,14 @@ public class GridManager : MonoBehaviour
         }
 
         return neighbours;
+    }
+
+
+    private void CreateGridVisual(Node node)
+    {
+        Vector3 pos = GetWorldPosition(node);
+        pos.y -=1f; ;
+
+        Instantiate(gridVisualPrefab, pos, Quaternion.identity);
     }
 }

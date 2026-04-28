@@ -1,15 +1,21 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class TurnManager : MonoBehaviour
 {
-    [Header("回合基本逻辑")]
     public static TurnManager Instance;
+    public event Action<int> OnTurnStarted;
+
+    [Header("回合基本逻辑")]
     private float turnTime = 5f;
     private float timer;
     private int currentRound = 0;
     private bool playerActed = false;
+
+    public float TimerPercent => timer / turnTime;
+    public float CurrentTimer => timer;
     //实例使用
     void Awake()
     {
@@ -32,6 +38,7 @@ public class TurnManager : MonoBehaviour
         //开始计时
         timer = turnTime;
         playerActed = false;
+        OnTurnStarted?.Invoke(currentRound);
     }
 
     void EndTurn()

@@ -18,6 +18,7 @@ public class AgentController : MonoBehaviour
     [SerializeField] private LayerMask groundMask;
     [SerializeField] private LayerMask enemyMask;
     [SerializeField] private float shootHeight = 1.2f;
+    [SerializeField] private LineRenderer aimLine;
     private Camera cam;
     public enum PlayerState
     {
@@ -32,6 +33,10 @@ public class AgentController : MonoBehaviour
         cam = Camera.main;
         currentNode = GetCurrentNode();
         CalculateRange();
+        if (aimLine != null)
+        {
+            aimLine.enabled = false;
+        }
     }
 
     void Update()
@@ -105,6 +110,7 @@ public class AgentController : MonoBehaviour
     void Aim()
     {
         AimRotate();
+        UpdateAimLine();
         Shoot();
     }
 
@@ -143,6 +149,7 @@ public class AgentController : MonoBehaviour
         //重新计算range刷新
         currentNode = GetCurrentNode();
         CalculateRange();
+        TurnManager.Instance.PlayerFinishedAction();
     }
     //移动范围限制算法调用
     void CalculateRange()
@@ -196,20 +203,59 @@ public class AgentController : MonoBehaviour
     {
         if (!Input.GetMouseButtonDown(0))
             return;
+
+        if (AmmoManager.Instance.CurrentAmmo <= 0)
+        {
+            Debug.Log("没子弹");
+            return;
+        }
+
+        AmmoManager.Instance.UseAmmo(); // 明确看到“消耗”
         //枪口高度
         Vector3 origin = transform.position + Vector3.up * shootHeight;
         //面朝方向
         Vector3 dir = transform.forward;
         //射击射线
-        if(Physics.Raycast(origin,dir,out RaycastHit hit, range, enemyMask))
+        if (Physics.Raycast(origin, dir, out RaycastHit hit, range, enemyMask))
         {
             Debug.Log("命中敌人: " + hit.collider.name);
             state = PlayerState.Idle;
+
+            if (aimLine != null)
+            {
+                aimLine.enabled = false;
+            }
         }
         else
         {
             Debug.Log("没命中");
             state = PlayerState.Idle;
+
+            if (aimLine != null)
+            {
+                aimLine.enabled = false;
+            }
         }
+
+        TurnManager.Instance.PlayerFinishedAction();
+    }
+    void UpdateAimLine()
+    {
+        if (aimLine == null) return;
+
+        Vector3 origin = transform.position + Vector3.up * shootHeight;
+        Vector3 dir = transform.forward;
+
+        Vector3 endPoint = origin + dir * range;
+
+        if (Physics.Raycast(origin, dir, out RaycastHit hit, range, enemyMask))
+        {
+            endPoint = hit.point;
+        }
+
+        aimLine.enabled = true;
+        aimLine.positionCount = 2;
+        aimLine.SetPosition(0, origin);
+        aimLine.SetPosition(1, endPoint);
     }
 }
