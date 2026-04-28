@@ -1,17 +1,28 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class NPC : Interactive
 {
-    [SerializeField] private DialogueData myDialogue;
+    public DialogueData talkDialogue;
+    public DialogueData afterComputerDialogue;
+    public DialogueData submitDialogue;
 
     public override void OnInteract()
     {
-        // 触发交互时，告诉管理器开始这段对话
-        if (myDialogue != null)
+        switch (QuestManager.Instance.CurrentQuest)
         {
-            DialogueManager.Instance.StartDialogue(myDialogue);
+            case QuestManager.QuestState.TalkToNPC:
+                DialogueManager.Instance.StartDialogue(talkDialogue);
+                QuestManager.Instance.CompleteTalkToNPC();
+                break;
+
+            case QuestManager.QuestState.UseComputer:
+                DialogueManager.Instance.StartDialogue(afterComputerDialogue);
+                break;
+
+            case QuestManager.QuestState.ReturnToSubmit:
+                DialogueManager.Instance.StartDialogue(submitDialogue);
+                QuestManager.Instance.SubmitMainItem();
+                break;
         }
     }
 }
